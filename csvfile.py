@@ -3,13 +3,13 @@ import csv, os, sys, re, codecs
 # Use regex to determine column number. 
 # Examples to parse for: 
 # 	time: [A-Z][a-z0-9 ]+\d+:\d+:\d+
-# 	date: \d{4}-\d{2}-\d{2}
+# 	date: \w{3,4}[-| ]\d{2}[-| ]\d{2}
 # 	log: log:\d+
 # 	ip address: \d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}(\/\d+)?
 # 	msg: (Allow|Deny|Teardown|Breakdown|Built).*?$
 
 regex_columns = { #number at the beginning of the key is for sorted purposes
-	'1': ('date','\d{4}-\d{2}-\d{2}'),
+	'1': ('date','\w{3,4}[-| ]\d{2}[-| ]\d{2}'),
 	'2': ('log','log:\d+'),
 	'3': ('time','[A-Z][a-z0-9 ]+\d+:\d+:\d+'),
 	'4': ('ip_address','\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}(\/\d+)?'),
@@ -21,7 +21,7 @@ regex_columns = { #number at the beginning of the key is for sorted purposes
 }	
 
 regex_lookup = { #number at the beginning of the key is for sorted purposes
-	'date' : '\d{4}-\d{2}-\d{2}',
+	'date' : '\w{3,4}[-| ]\d{2}[-| ]\d{2}',
 	'log' : 'log:\d+',
 	'time' : '[A-Z][a-z0-9 ]+\d+:\d+:\d+',
 	'ip_address' : '\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}(\/\d+)?',
@@ -36,24 +36,15 @@ order = []
 
 def fix_file_format(filename):
 	f = open('tmp.txt','w',encoding='utf8')
-	try: s = re.sub(r'(\d{4}-\d{2}-\d{2}.*?)\n',r'\g<1>',open(filename, encoding='utf16').read())
-	except: s = re.sub(r'(\d{4}-\d{2}-\d{2}.*?)\n',r'\g<1>',open(filename, encoding='utf8').read())
+	try: s = re.sub(r'(\w{3,4}[-| ]\d{2}[-| ]\d{2})\n',r'\g<1>',open(filename, encoding='utf16').read())
+	except: s = re.sub(r'(\w{3,4}[-| ]\d{2}[-| ]\d{2})\n',r'\g<1>',open(filename, encoding='utf8').read())
 	f.write(s)
 	f.close()
 	return
-	
-'''def file_format_is_funky(filename):
-	contents = parse(filename)
-	for each in contents:
-		if each == '' or each == '\n':
-			pass
-		elif not re.match('\d{4}-\d{2}-\d{2}',each):
-			return True
-	return False'''
 			
 def determine_columns_from_first_line(contents):
 	for each in contents:
-		if re.match('\d{4}-\d{2}-\d{2}',each):
+		if re.match('\w{3,4}[-| ]\d{2}[-| ]\d{2}',each):
 			row = each
 			break
 	headers = {}
@@ -120,9 +111,13 @@ import os
 
 if __name__ == '__main__':
 	Tk().withdraw()
-	filename = askopenfilename()
-	if filename == '':
-		sys.exit()
+
+	if len(sys.argv) == 2:
+		filename = sys.argv[1]
+	else:
+		filename = askopenfilename()
+		if filename == '':
+			sys.exit()
 		
 	fix_file_format(filename)
 	contents = parse('tmp.txt')
